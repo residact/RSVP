@@ -162,9 +162,9 @@ async function serveStatic(pathname: string): Promise<Response> {
   return new Response(file, { headers: { "cache-control": "no-cache" } });
 }
 
-const server = Bun.serve({
+const start = (hostname: string) => Bun.serve({
   port: config.port,
-  hostname: config.host,
+  hostname,
   maxRequestBodySize: config.maxUpload + 1024,
   idleTimeout: 120,
   async fetch(req, srv) {
@@ -188,6 +188,20 @@ const server = Bun.serve({
   },
 });
 
+/** Écoute en double pile (IPv4 + IPv6) : `localhost` peut résoudre vers ::1, notamment avec Podman. */
+function listen(): ReturnType<typeof start> {
+  let error: unknown;
+  for (const host of config.hosts) {
+    try {
+      return start(host);
+    } catch (e) {
+      error = e;
+    }
+  }
+  throw error;
+}
+
+const server = listen();
 console.log(`RSVP prêt sur http://localhost:${server.port}`);
 if (!config.token) console.log(`Jeton d'accès : ${store.token}`);
 else console.log("Jeton d'accès : défini par RSVP_TOKEN (.env)");

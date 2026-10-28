@@ -10,7 +10,8 @@
     "start": "bun src/server/index.ts",
     "typecheck": "tsc --noEmit",
     "test": "bun test",
-    "skills:install": "bun skills/install.ts"
+    "skills:install": "bun skills/install.ts",
+    "podman:install": "bun podman/install.ts"
   },
   "dependencies": {
     "@lingo-reader/mobi-parser": "^0.4.6",

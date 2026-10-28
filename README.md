@@ -26,13 +26,44 @@ Les textes, livres et réglages sont dans le volume Docker `rsvp-data`.
 
 `.env` est ignoré par git ; `.env.example` sert de modèle.
 
+## Podman
+
+Le même `Dockerfile` et le même `docker-compose.yml` fonctionnent avec Podman (rootless).
+
+```bash
+podman-compose up -d --build            # ou : podman compose up -d --build
+podman-compose logs rsvp
+```
+
+Sans compose :
+
+```bash
+podman build --format docker -t localhost/rsvp-reader:latest .
+podman run -d --name rsvp --restart unless-stopped --env-file .env \
+  -e PORT=8787 -e DATA_DIR=/data -p 8787:8787 -v rsvp-data:/data localhost/rsvp-reader:latest
+```
+
+### Service systemd (Quadlet)
+
+Pour un démarrage automatique géré par systemd (utilisateur), sans démon :
+
+```bash
+bun podman/install.ts --dry-run     # voir les unités générées
+bun podman/install.ts               # écrit ~/.config/containers/systemd/, construit l'image et démarre rsvp.service
+loginctl enable-linger $USER        # (facultatif) démarrer sans session ouverte
+```
+
+Les unités sont dans [podman/](podman) : `rsvp.build` (image), `rsvp-data.volume` (données) et `rsvp.container`
+(service, port lu dans `PORT` du `.env`). `bun podman/install.ts --uninstall` les retire (le volume est conservé).
+Ne lance pas Docker et Podman sur le même port en même temps.
+
 ## Développement
 
 ```bash
 bun install
 bun run dev          # construit l'interface puis lance le serveur avec rechargement
 bun run typecheck    # tsc --noEmit
-bun test             # tests (store, formats de livres, markdown, installation du skill)
+bun test             # tests (store, formats de livres, markdown, installation du skill et de Quadlet)
 ```
 
 Sans Bun installé, utilise l'image officielle : `docker run --rm -v "$PWD":/app -w /app oven/bun:1 bun test`.
@@ -42,6 +73,7 @@ src/server/   serveur Bun (API REST, SSE, MCP, parseurs EPUB/PDF/MOBI)
 src/web/      interface (TypeScript, CSS)
 src/shared/   types partagés serveur / interface
 skills/       skill d'agent + script d'installation
+podman/       unités Quadlet (systemd) + installateur
 test/         tests bun
 ```
 

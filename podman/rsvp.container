@@ -1,0 +1,24 @@
+# Quadlet : conteneur RSVP géré par systemd (utilisateur).
+[Unit]
+Description=RSVP Reader (lecteur RSVP, API REST, MCP)
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+Image=rsvp.build
+ContainerName=rsvp
+EnvironmentFile=__REPO__/.env
+Environment=PORT=8787
+Environment=DATA_DIR=/data
+PublishPort=__PORT__:8787
+Volume=rsvp-data.volume:/data
+HealthCmd=bun -e "fetch('http://127.0.0.1:8787/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+HealthInterval=30s
+HealthRetries=3
+
+[Service]
+Restart=always
+TimeoutStartSec=900
+
+[Install]
+WantedBy=default.target

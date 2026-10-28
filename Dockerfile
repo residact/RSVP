@@ -1,5 +1,5 @@
 # --- Construction : dépendances, typage, bundle de l'interface ---
-FROM oven/bun:1 AS build
+FROM docker.io/oven/bun:1 AS build
 WORKDIR /app
 COPY package.json bun.lock ./
 RUN bun install --frozen-lockfile
@@ -8,7 +8,7 @@ COPY src ./src
 RUN bun run typecheck && bun run build:web
 
 # --- Exécution : dépendances de production seulement ---
-FROM oven/bun:1-alpine
+FROM docker.io/oven/bun:1-alpine
 ENV NODE_ENV=production PORT=8787 DATA_DIR=/data
 WORKDIR /app
 COPY package.json bun.lock ./

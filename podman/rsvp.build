@@ -1,0 +1,6 @@
+# Quadlet : construit l'image à partir du Dockerfile du dépôt.
+[Build]
+ImageTag=localhost/rsvp-reader:latest
+File=__REPO__/Dockerfile
+SetWorkingDirectory=__REPO__
+Pull=missing
