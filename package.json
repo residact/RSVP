@@ -11,7 +11,10 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test",
     "skills:install": "bun skills/install.ts",
-    "podman:install": "bun podman/install.ts"
+    "podman:install": "bun podman/install.ts",
+    "docker:up": "docker compose -f docker/docker-compose.yml --env-file .env up -d --build",
+    "docker:down": "docker compose -f docker/docker-compose.yml --env-file .env down",
+    "docker:logs": "docker compose -f docker/docker-compose.yml --env-file .env logs -f rsvp"
   },
   "dependencies": {
     "@lingo-reader/mobi-parser": "^0.4.6",

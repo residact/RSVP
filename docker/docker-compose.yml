@@ -1,0 +1,22 @@
+# Lancer depuis la racine du dépôt :
+#   docker compose -f docker/docker-compose.yml --env-file .env up -d --build
+# (--env-file sert à lire PORT pour le port publié ; RSVP_TOKEN est lu via env_file)
+name: rsvp
+
+services:
+  rsvp:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: rsvp-reader:latest
+    container_name: rsvp
+    restart: unless-stopped
+    env_file: ../.env
+    environment:
+      PORT: "8787"
+    ports:
+      - "${PORT:-8787}:8787"
+    volumes:
+      - rsvp-data:/data
+volumes:
+  rsvp-data:

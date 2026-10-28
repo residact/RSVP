@@ -10,7 +10,7 @@ bundlée par Bun.
 
 ```bash
 cp .env.example .env        # puis renseigne RSVP_TOKEN (ex. : openssl rand -base64 24 | tr '+/' '-_' | tr -d '=')
-docker compose up -d --build
+bun run docker:up          # = docker compose -f docker/docker-compose.yml --env-file .env up -d --build
 ```
 
 Ouvre http://localhost:8787 et saisis le jeton (ou `http://localhost:8787/?token=<jeton>`).
@@ -28,17 +28,17 @@ Les textes, livres et réglages sont dans le volume Docker `rsvp-data`.
 
 ## Podman
 
-Le même `Dockerfile` et le même `docker-compose.yml` fonctionnent avec Podman (rootless).
+Le même `docker/Dockerfile` et le même `docker/docker-compose.yml` fonctionnent avec Podman (rootless).
 
 ```bash
-podman-compose up -d --build            # ou : podman compose up -d --build
-podman-compose logs rsvp
+podman-compose -f docker/docker-compose.yml --env-file .env up -d --build
+podman-compose -f docker/docker-compose.yml logs rsvp
 ```
 
 Sans compose :
 
 ```bash
-podman build --format docker -t localhost/rsvp-reader:latest .
+podman build --format docker -f docker/Dockerfile -t localhost/rsvp-reader:latest .
 podman run -d --name rsvp --restart unless-stopped --env-file .env \
   -e PORT=8787 -e DATA_DIR=/data -p 8787:8787 -v rsvp-data:/data localhost/rsvp-reader:latest
 ```
@@ -72,6 +72,7 @@ Sans Bun installé, utilise l'image officielle : `docker run --rm -v "$PWD":/app
 src/server/   serveur Bun (API REST, SSE, MCP, parseurs EPUB/PDF/MOBI)
 src/web/      interface (TypeScript, CSS)
 src/shared/   types partagés serveur / interface
+docker/       Dockerfile, docker-compose.yml, exclusions de build
 skills/       skill d'agent + script d'installation
 podman/       unités Quadlet (systemd) + installateur
 test/         tests bun

@@ -24,7 +24,7 @@ function login(error?: string): void {
   const msg = h("p", { class: "muted", style: "color:var(--danger);margin:0", hidden: !error }, error ?? "");
   const form = h("form", { class: "card stack", onsubmit: (e: Event) => { e.preventDefault(); setToken(input.value.trim()); void boot(); } },
     h("div", { class: "brand", style: "padding:0" }, h("div", { class: "logo" }, h("i")), h("div", {}, h("b", {}, "RSVP"), h("small", {}, "Lecteur auto-hébergé"))),
-    h("p", { class: "hint", style: "margin:0" }, "Saisis le jeton RSVP_TOKEN défini dans le fichier .env (ou affiché dans les logs : ", h("code", {}, "docker compose logs rsvp"), ")."),
+    h("p", { class: "hint", style: "margin:0" }, "Saisis le jeton RSVP_TOKEN défini dans le fichier .env (ou affiché dans les logs : ", h("code", {}, "bun run docker:logs"), ")."),
     input, msg, h("button", { class: "btn primary", type: "submit" }, "Se connecter"));
   app.replaceChildren(h("div", { class: "login" }, form));
   input.focus();
