@@ -1,5 +1,10 @@
 node_modules
+dist
 data
 .git
+.env
 *.log
+test
+skills
+extensions-chrome
 README.md

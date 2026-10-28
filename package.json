@@ -1,24 +1,28 @@
 {
-  "name": "rsvp-server",
-  "version": "1.0.0",
+  "name": "rsvp-reader",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Lecteur RSVP auto-hébergé : interface web, API REST et serveur MCP",
+  "description": "Lecteur RSVP auto-hébergé : interface web, API REST, serveur MCP et bibliothèque de livres (Bun + TypeScript)",
   "scripts": {
-    "start": "node server/index.js",
-    "dev": "node --watch server/index.js",
-    "test": "node --test server/"
-  },
-  "engines": {
-    "node": ">=22"
+    "dev": "bun run build:web && bun --watch src/server/index.ts",
+    "build:web": "bun build src/web/index.html --outdir dist/web --minify && cp src/web/static/* dist/web/",
+    "start": "bun src/server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test",
+    "skills:install": "bun skills/install.ts"
   },
   "dependencies": {
     "@lingo-reader/mobi-parser": "^0.4.6",
-    "@modelcontextprotocol/sdk": "^1.12.0",
-    "fast-xml-parser": "^5.11.2",
-    "fflate": "^0.8.3",
-    "node-html-parser": "^9.0.5",
-    "unpdf": "^1.9.1",
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "fast-xml-parser": "^5.0.0",
+    "fflate": "^0.8.2",
+    "node-html-parser": "^7.0.0",
+    "unpdf": "^1.0.0",
     "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
   }
 }

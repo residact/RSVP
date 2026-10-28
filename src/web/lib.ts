@@ -1,17 +1,28 @@
 // Utilitaires partagés : DOM, API, icônes, notifications, état global.
-export const state = { settings: null, info: null, token: localStorage.getItem("rsvp.token") || "" };
+import { DEFAULT_SETTINGS } from "../shared/defaults.ts";
+import type { Info, Settings } from "../shared/types.ts";
 
-export function h(tag, props = {}, ...kids) {
+export const state: { settings: Settings; info: Info | null; token: string } = {
+  settings: { ...DEFAULT_SETTINGS },
+  info: null,
+  token: localStorage.getItem("rsvp.token") ?? "",
+};
+
+export type Kid = Node | string | number | null | undefined | false | Kid[];
+export type Props = Record<string, unknown>;
+
+/** Crée un élément DOM : propriétés, écouteurs (onclick…) et enfants. */
+export function h<K extends keyof HTMLElementTagNameMap>(tag: K, props: Props | null = {}, ...kids: Kid[]): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(props ?? {})) {
     if (v == null || v === false) continue;
-    if (k.startsWith("on")) el.addEventListener(k.slice(2).toLowerCase(), v);
-    else if (k === "class") el.className = v;
-    else if (k === "html") el.innerHTML = v;
-    else if (k in el && k !== "list") el[k] = v;
-    else el.setAttribute(k, v === true ? "" : v);
+    if (k.startsWith("on") && typeof v === "function") el.addEventListener(k.slice(2).toLowerCase(), v as EventListener);
+    else if (k === "class") el.className = String(v);
+    else if (k === "html") el.innerHTML = String(v);
+    else if (k in el && k !== "list") (el as unknown as Record<string, unknown>)[k] = v;
+    else el.setAttribute(k, v === true ? "" : String(v));
   }
-  for (const kid of kids.flat()) if (kid != null && kid !== false) el.append(kid.nodeType ? kid : document.createTextNode(kid));
+  for (const kid of kids.flat(Infinity as 1) as Kid[]) if (kid != null && kid !== false) el.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
   return el;
 }
 
@@ -27,24 +38,28 @@ const ICONS = {
   copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
   trash: '<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   text: '<path d="M5 6h14M5 12h14M5 18h9"/>',
-  eye: '<path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   library: '<path d="M4 4h4v16H4zM10 4h4v16h-4zM16.5 5.2l3.6-1 3.4 14.6-3.6 1z"/>',
   upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
   refresh: '<path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/>',
-};
-export const icon = (name) => h("span", { html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`, style: "display:contents" });
+} as const;
 
-let toastTimer;
-export function toast(msg) {
-  let el = document.querySelector(".toast");
+export type IconName = keyof typeof ICONS;
+
+export const icon = (name: IconName): HTMLElement =>
+  h("span", { html: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`, style: "display:contents" });
+
+let toastTimer: ReturnType<typeof setTimeout> | undefined;
+export function toast(msg: string): void {
+  let el = document.querySelector<HTMLElement>(".toast");
   if (!el) document.body.append((el = h("div", { class: "toast", role: "status" })));
   el.textContent = msg;
   el.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+  const shown = el;
+  toastTimer = setTimeout(() => shown.classList.remove("show"), 2800);
 }
 
-export async function copy(text) {
+export async function copy(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
@@ -59,41 +74,47 @@ export async function copy(text) {
 
 export class AuthError extends Error {}
 
-export async function api(path, { method = "GET", body } = {}) {
+export async function api<T = unknown>(path: string, opts: { method?: string; body?: unknown } = {}): Promise<T> {
   const res = await fetch(`/api${path}`, {
-    method,
-    headers: { authorization: `Bearer ${state.token}`, ...(body ? { "content-type": "application/json" } : {}) },
-    body: body ? JSON.stringify(body) : undefined,
+    method: opts.method ?? "GET",
+    headers: { authorization: `Bearer ${state.token}`, ...(opts.body ? { "content-type": "application/json" } : {}) },
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
   });
   if (res.status === 401) throw new AuthError("Jeton invalide");
-  const data = await res.json().catch(() => ({}));
+  const data = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
-  return data;
+  return data as T;
 }
 
-export function setToken(t) {
+export function setToken(t: string): void {
   state.token = t;
   localStorage.setItem("rsvp.token", t);
 }
 
-export const minutes = (words, wpm) => {
+export const minutes = (words: number, wpm: number): string => {
   const s = Math.round((words / wpm) * 60);
   return s < 60 ? `${s} s` : `${Math.floor(s / 60)} min ${String(s % 60).padStart(2, "0")} s`;
 };
 
-export const ago = (iso) => {
-  const d = (Date.now() - new Date(iso)) / 1000;
+export const ago = (iso: string): string => {
+  const d = (Date.now() - new Date(iso).getTime()) / 1000;
   if (d < 60) return "à l’instant";
   if (d < 3600) return `il y a ${Math.floor(d / 60)} min`;
   if (d < 86400) return `il y a ${Math.floor(d / 3600)} h`;
   return new Date(iso).toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
 };
 
-export const paintRange = (input) => {
+export const paintRange = (input: HTMLInputElement): void => {
   const { min, max, value } = input;
-  input.style.setProperty("--p", `${((value - min) / (max - min)) * 100}%`);
+  input.style.setProperty("--p", `${((Number(value) - Number(min)) / (Number(max) - Number(min))) * 100}%`);
 };
 
-export function applyAccent(color) {
-  document.documentElement.style.setProperty("--accent", color);
+export const applyAccent = (color: string): void => document.documentElement.style.setProperty("--accent", color);
+
+/** Contexte passé aux pages par le routeur. */
+export interface Ctx {
+  go: (path: string) => void;
+  logout: () => void;
+  refresh: () => void;
 }
+export type Cleanup = () => void;
