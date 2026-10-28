@@ -2,5 +2,9 @@ node_modules
 dist
 data
 *.log
-.env
 .DS_Store
+
+# Secrets : jamais committés (le modèle .env.example est conservé)
+.env
+.env.*
+!.env.example
