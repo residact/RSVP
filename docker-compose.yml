@@ -1,0 +1,17 @@
+services:
+  rsvp:
+    build: .
+    image: rsvp-reader:latest
+    container_name: rsvp
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      # Jeton fixe (sinon généré au premier lancement et affiché dans les logs).
+      RSVP_TOKEN: ${RSVP_TOKEN:-}
+      # Adresse https publique si tu exposes le port (tunnel) : sert aux liens du MCP.
+      RSVP_PUBLIC_URL: ${RSVP_PUBLIC_URL:-}
+    volumes:
+      - rsvp-data:/data
+volumes:
+  rsvp-data:

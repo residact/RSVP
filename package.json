@@ -1,0 +1,24 @@
+{
+  "name": "rsvp-server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Lecteur RSVP auto-hébergé : interface web, API REST et serveur MCP",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test server/"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@lingo-reader/mobi-parser": "^0.4.6",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "fast-xml-parser": "^5.11.2",
+    "fflate": "^0.8.3",
+    "node-html-parser": "^9.0.5",
+    "unpdf": "^1.9.1",
+    "zod": "^3.25.0"
+  }
+}
